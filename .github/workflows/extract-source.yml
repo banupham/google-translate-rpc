@@ -1,0 +1,30 @@
+name: Extract source archive
+on:
+  push:
+    paths:
+      - 'google_translate_api_v2_final.zip'
+      - '.github/workflows/extract-source.yml'
+permissions:
+  contents: write
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract source and remove archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf _unpack
+          mkdir _unpack
+          unzip -q google_translate_api_v2_final.zip -d _unpack
+          cp -a _unpack/. .
+          rm -rf _unpack google_translate_api_v2_final.zip .github
+          find . -type d -name __pycache__ -prune -exec rm -rf {} + || true
+          find . -type f -name '*.pyc' -delete || true
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'Extract Google Translate V2 Final source'
+          git push
